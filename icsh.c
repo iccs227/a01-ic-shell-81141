@@ -4,10 +4,17 @@
 */
 
 #include <stdio.h>
-#include <stdlib.h>   
-#include <string.h>   
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
 #include <ctype.h> 
 #include <stdbool.h>
+#include <signal.h>
+#include <termios.h>
+
 
 #define MAX_CMD_BUFFER 255
 
@@ -69,9 +76,39 @@ int main(int argc, char *argv[]) {
             fflush(stdout); 
             break; // exit loop; will return exits % 256 below
         }
-        else {
-            printf("bad command\n");
-        }
+        // else {
+        //     printf("bad command\n");
+        // }
+        else{
+            int pid;
+            char *prog_argv[32]; // safe upper bound 31 + NULL
+
+            char *token = strtok(buffer," "); // im splitting the command 
+            
+            int i = 0; // this is for my while loop 
+            while (i < 31 && token){
+                prog_argv[i++] = token; // save the current in the list 
+                token = strtok(NULL," ");// move to the next word
+            }
+            prog_argv[i] = NULL; // make the ending null for execvp()
+
+            if ((pid=fork()) < 0)
+            {
+                perror ("Fork failed");
+                exit(errno);
+            }
+            if (!pid)
+            {
+                execvp (prog_argv[0], prog_argv);
+                printf("Bad comment\n");
+                exit(1); 
+            }
+
+            else
+            {
+                waitpid (pid, NULL, 0); 
+            }
+                }
 
         if (strcmp(buffer, "!!") != 0) // if it's not !! at the end we then update last
             strcpy(last_cmd, buffer);
