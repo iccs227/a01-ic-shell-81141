@@ -1,7 +1,7 @@
 /* ICCS227: Project 1: icsh
  * Name: Hanna Hahn
  * StudentID: 6481334
-*/
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,27 +14,13 @@
 #include <stdbool.h>
 #include <signal.h>
 #include <termios.h>
-
+#include "signals.h"
+#include "executor.h"
 
 #define MAX_CMD_BUFFER 255
 
 int fg_pid;
 int exit2;
-
-void signal_Z (int sig_num){
-    if(fg_pid > 0) {
-        kill(-fg_pid,SIGTSTP);
-    }
-    // signal(SIGTSTP,signal_Z);
-    // printf("You pressed Ctrl+Z\n");
-}
-void signal_C (int sig_num){
-    if(fg_pid > 0) {
-        kill(-fg_pid,SIGINT);
-    }
-    // signal(SIGINT,signal_C);
-    // printf("You pressed Ctrl+C\n");
-}
 
 int main(int argc, char *argv[]) {
     FILE *file = stdin; // reading file and also initialize it 
@@ -53,28 +39,13 @@ int main(int argc, char *argv[]) {
         }
         active = false;
     } else if (argc > 2) {
-        // too many arguments: show usage and exit
         fprintf(stderr, "Usage: %s [scriptfile]\n", argv[0]);
         return 1;
     }
     
+    pid_t shell_pid = getpid();
+    setup_shell_signals(shell_pid);  // make shell fg and register handlers
 
-    /*
-    this is for the shell
-    preparing shell to control the terminal and
-    give it to the child later after that we reclaim it .
-    *-making shell the current controler  and fg
-    */ 
-   pid_t shell_pid = getpid();
-    setpgid(shell_pid,shell_pid); 
-    tcsetpgrp(0,shell_pid); //make shell the fg group for terminal 
-
-    //!Debugging issue 
-    signal(SIGTTOU, SIG_IGN);
-    signal(SIGTTIN, SIG_IGN);
-
-    signal(SIGTSTP,signal_Z);
-    signal(SIGINT,signal_C);
     while (1) {
         if(active){
             printf(":-) \n");
@@ -112,57 +83,9 @@ int main(int argc, char *argv[]) {
         else if (strcmp(buffer, "echo $?") == 0) { // return last exit statement
             printf("%d\n", exit2);
         }
-        // else {
-        //     printf("bad command\n");
-        // }
-        else{
-            int pid;
-            char *prog_argv[32]; // safe upper bound 31 + NULL
-
-            char *token = strtok(buffer," "); // im splitting the command 
-            
-            int i = 0; // this is for my while loop 
-            while (i < 31 && token){
-                prog_argv[i++] = token; // save the current in the list 
-                token = strtok(NULL," ");// move to the next word
-            }
-            prog_argv[i] = NULL; // make the ending null for execvp()
-
-            if ((pid=fork()) < 0)
-            {
-                perror ("Fork failed");
-                exit(errno);
-            }
-            if (!pid)  //child
-            {
-                setpgid(0, 0); // Create a new process group for the child
-                tcsetpgrp(0,getpid()); // give terminal control to the new child 
-
-                execvp (prog_argv[0], prog_argv);
-                fprintf(stderr,"Bad comment"); // i had to change this since it exits 
-                fflush(stderr);
-                tcsetpgrp(0, getppid()); // return to the main terminal not exit 
-                exit(127); //command-not-found 
-            }
-
-            else 
-            {
-                //parent
-                //* prevents any race condition (call child again incase)
-                setpgid(pid,pid);
-                tcsetpgrp(0,pid);
-                fg_pid = pid;
-
-                int stop ;
-                waitpid (pid, &stop, WUNTRACED); 
-                tcsetpgrp(0,shell_pid); // return control to the shell 
-                fg_pid = 0;
-
-                if (WIFSTOPPED(stop)){
-                    printf("\nWorking\n");
-                }               
-            }
-                }
+        else {
+            milestone3(buffer, shell_pid);  // Milestone 3 
+        }
 
         if (strcmp(buffer, "!!") != 0) // if it's not !! at the end we then update last
             strcpy(last_cmd, buffer);
@@ -174,7 +97,3 @@ int main(int argc, char *argv[]) {
 
     return exits * 0xFF; // keep in the range of 0–255
 }
-
-
-// run using                        ./icsh.exe tesh.sh
-// to check the exit number run     echo $?
