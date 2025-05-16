@@ -18,6 +18,24 @@
 
 #define MAX_CMD_BUFFER 255
 
+int fg_pid;
+int exit2;
+
+void signal_Z (int sig_num){
+    if(fg_pid > 0) {
+        kill(-fg_pid,SIGTSTP);
+    }
+    // signal(SIGTSTP,signal_Z);
+    // printf("You pressed Ctrl+Z\n");
+}
+void signal_C (int sig_num){
+    if(fg_pid > 0) {
+        kill(-fg_pid,SIGINT);
+    }
+    // signal(SIGINT,signal_C);
+    // printf("You pressed Ctrl+C\n");
+}
+
 int main(int argc, char *argv[]) {
     FILE *file = stdin; // reading file and also initialize it 
     bool active = true; 
@@ -39,9 +57,24 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage: %s [scriptfile]\n", argv[0]);
         return 1;
     }
+    
 
-    // printf("Hello\n");
-    // fflush(stdout);
+    /*
+    this is for the shell
+    preparing shell to control the terminal and
+    give it to the child later after that we reclaim it .
+    *-making shell the current controler  and fg
+    */ 
+   pid_t shell_pid = getpid();
+    setpgid(shell_pid,shell_pid); 
+    tcsetpgrp(0,shell_pid); //make shell the fg group for terminal 
+
+    //!Debugging issue 
+    signal(SIGTTOU, SIG_IGN);
+    signal(SIGTTIN, SIG_IGN);
+
+    signal(SIGTSTP,signal_Z);
+    signal(SIGINT,signal_C);
     while (1) {
         if(active){
             printf(":-) \n");
@@ -76,6 +109,9 @@ int main(int argc, char *argv[]) {
             fflush(stdout); 
             break; // exit loop; will return exits % 256 below
         }
+        else if (strcmp(buffer, "echo $?") == 0) { // return last exit statement
+            printf("%d\n", exit2);
+        }
         // else {
         //     printf("bad command\n");
         // }
@@ -97,16 +133,34 @@ int main(int argc, char *argv[]) {
                 perror ("Fork failed");
                 exit(errno);
             }
-            if (!pid)
+            if (!pid)  //child
             {
+                setpgid(0, 0); // Create a new process group for the child
+                tcsetpgrp(0,getpid()); // give terminal control to the new child 
+
                 execvp (prog_argv[0], prog_argv);
-                printf("Bad comment\n");
-                exit(1); 
+                fprintf(stderr,"Bad comment"); // i had to change this since it exits 
+                fflush(stderr);
+                tcsetpgrp(0, getppid()); // return to the main terminal not exit 
+                exit(127); //command-not-found 
             }
 
-            else
+            else 
             {
-                waitpid (pid, NULL, 0); 
+                //parent
+                //* prevents any race condition (call child again incase)
+                setpgid(pid,pid);
+                tcsetpgrp(0,pid);
+                fg_pid = pid;
+
+                int stop ;
+                waitpid (pid, &stop, WUNTRACED); 
+                tcsetpgrp(0,shell_pid); // return control to the shell 
+                fg_pid = 0;
+
+                if (WIFSTOPPED(stop)){
+                    printf("\nWorking\n");
+                }               
             }
                 }
 
