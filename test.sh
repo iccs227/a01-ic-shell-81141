@@ -1,4 +1,10 @@
-echo hello
-echo world
-!!
-exit 5
+# echo hello
+# echo world
+# !!
+# exit 5
+
+
+cat < numbers.txt
+sort < numbers.txt > sorted2.txt
+grep cherry < fruits.txt > cherry.txt
+exit 42

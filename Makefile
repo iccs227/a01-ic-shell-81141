@@ -1,19 +1,26 @@
-CC = gcc
-CFLAGS = -Wall -g
-BINARY = icsh
+CC       := gcc
+CFLAGS   := -Wall -g -Iinclude
+SRCDIR   := src
+BUILDDIR := build
+BINDIR   := bin
+TARGET   := $(BINDIR)/icsh
 
-SRCS = icsh.c signals.c executor.c
-OBJS = $(SRCS:.c=.o)
+SRCS     := $(wildcard $(SRCDIR)/*.c)
+OBJS     := $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SRCS))
 
-all: $(BINARY)
+.PHONY: all clean directories
 
-$(BINARY): $(OBJS)
-	$(CC) $(CFLAGS) -o $(BINARY) $(OBJS)
+all: directories $(TARGET)
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $<
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
+	@ln -sf $(TARGET) ./icsh
 
-.PHONY: clean
+$(BUILDDIR)/%.o: $(SRCDIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
+directories:
+	@mkdir -p $(BUILDDIR) $(BINDIR)
 clean:
-	rm -f $(BINARY) *.o
+	rm -rf $(BUILDDIR)/*.o $(TARGET)
+	rm -f ./icsh

@@ -1,6 +1,7 @@
 #ifndef SIGNALS_H
 #define SIGNALS_H
 
+#include <sys/types.h>
 #include <signal.h>
 #include <termios.h>
 

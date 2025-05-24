@@ -95,5 +95,5 @@ int main(int argc, char *argv[]) {
         fclose(file);
     }
 
-    return exits * 0xFF; // keep in the range of 0–255
+    return exits ; 
 }
