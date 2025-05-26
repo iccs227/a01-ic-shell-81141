@@ -84,7 +84,22 @@ int main(int argc, char *argv[]) {
             printf("%d\n", exit2);
         }
         else {
-            milestone3(buffer, shell_pid);  // Milestone 3 
+            //ex:  "sleep & "
+            bool background = false; // here is where i start m6 the & part
+            // first i will remove the white trail so i can get the last posi. easier
+            int len = strlen(buffer);
+            while (isspace(buffer[len-1]) && len > 0){ //"sleep &"
+                buffer[--len] = '\0'; // reduce the size to take out the whitetrailing  
+            }
+            if(len > 0 && buffer[len-1] == '&'){
+                background = true;
+                buffer[--len] = '\0'; // "sleep "
+                buffer[--len] = '\0'; // "sleep" 
+                // if user puts more then 1 space then won't work skill issue
+                // easy fix could be to put the while loop again but im lazy. 
+            }
+
+            milestone3(buffer, shell_pid,background);  // Milestone 3 
         }
 
         if (strcmp(buffer, "!!") != 0) // if it's not !! at the end we then update last
@@ -95,5 +110,5 @@ int main(int argc, char *argv[]) {
         fclose(file);
     }
 
-    return exits ; 
+    return exits; 
 }

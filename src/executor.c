@@ -10,7 +10,7 @@
 extern int fg_pid;
 extern int exit2;
 
-void milestone3(char *buffer, pid_t shell_pid) {
+void milestone3(char *buffer, pid_t shell_pid, bool background) {
     int pid;
     char *prog_argv[32]; // safe upper bound 31 + NULL
 
@@ -61,19 +61,26 @@ void milestone3(char *buffer, pid_t shell_pid) {
     else { // parent
         //* prevents any race condition (call child again incase)
         setpgid(pid, pid);
-        tcsetpgrp(0, pid);
-        fg_pid = pid;
 
-        int stop;
-        waitpid(pid, &stop, WUNTRACED);
-        tcsetpgrp(0, shell_pid); // return control to the shell 
-        fg_pid = 0;
-
-        if (WIFSTOPPED(stop)) {
-            printf("\nSuspended\n");
+        if(background){
+            printf("[temp] %d\n" , pid);
+            fflush(stdout);
         }
-        if (WIFEXITED(stop)) {
-            exit2 = WEXITSTATUS(stop);
+        else{
+            tcsetpgrp(0, pid);
+            fg_pid = pid;
+
+            int stop;
+            waitpid(pid, &stop, WUNTRACED);
+            tcsetpgrp(0, shell_pid); // return control to the shell 
+            fg_pid = 0;
+
+            if (WIFSTOPPED(stop)) {
+                printf("\nSuspended\n");
+            }
+            if (WIFEXITED(stop)) {
+                exit2 = WEXITSTATUS(stop);
+            }
         }
     }
 }
