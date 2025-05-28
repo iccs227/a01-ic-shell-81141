@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "termios.h": "c",
-        "executor.h": "c"
+        "executor.h": "c",
+        "jobs.h": "c"
     }
 }
