@@ -16,6 +16,8 @@
 #include <termios.h>
 #include "signals.h"
 #include "executor.h"
+#include "jobs.h"
+
 
 #define MAX_CMD_BUFFER 255
 
@@ -45,10 +47,10 @@ int main(int argc, char *argv[]) {
     
     pid_t shell_pid = getpid();
     setup_shell_signals(shell_pid);  // make shell fg and register handlers
-
+    initialize();  // this is from the jobs 
     while (1) {
         if(active){
-            printf(":-) \n");
+            printf(":-) \n"); 
             printf("icsh $ ");
             fflush(stdout); //force output to be written to the file
         }
@@ -62,17 +64,36 @@ int main(int argc, char *argv[]) {
         if (buffer[0] == '\0')
             continue;
 
-        if (strcmp(buffer, "!!") == 0) {
-            if (last_cmd[0] != '\0') {
-                printf("%s\n", last_cmd);
-                strcpy(buffer, last_cmd);
-            } else{
-                continue;
-            } 
-        }
+        bool history = false; // see if the command came from the history or not 
 
-        if (strncmp(buffer, "echo ", 5) == 0) { // 5 because at the end there's a space
-            printf("%s\n", buffer + 5); // move past the echo and only take what comes after that
+        if (strncmp(buffer, "!!", 2) == 0) {
+            char array[MAX_CMD_BUFFER];
+            char *space = buffer + 2; // detect what is after !!
+            while (isspace(*space)){
+                space++; // removing the white spaces after !!
+            }
+            if(*space){ // this is for when there's something behind the !!
+                snprintf(array, sizeof(array), "%s %s", last_cmd, space);
+            }
+            else{ // for when it's only !! 
+                snprintf(array, sizeof(array), "%s", last_cmd);
+            }
+            printf("%s\n", array);
+            strcpy(buffer, array);
+            history = true; // see if the command came from the history or not 
+        }
+        if (!history) {
+            strcpy(last_cmd, buffer); // if it's not from the history we will record it 
+        }
+        if (strncmp(buffer, "echo ", 5) == 0) {
+            // here is where i fix the echo > output.txt so that i doesn't treat all of it as a string 
+            // and redirect it properly in milestone 3
+            if (strchr(buffer, '>') != NULL || strchr(buffer, '<') != NULL) { 
+                milestone3(buffer, shell_pid, false);
+            }else{
+                printf("%s\n", buffer + 5);
+            }
+            continue;
         }
         else if (strncmp(buffer, "exit ", 5) == 0) {
             exits = atoi(buffer + 5); // atoi converts the string into an int "300" -> 300
@@ -83,15 +104,19 @@ int main(int argc, char *argv[]) {
         else if (strcmp(buffer, "echo $?") == 0) { // return last exit statement
             printf("%d\n", exit2);
         }
+        else if (strcmp(buffer, "jobs") == 0){
+            printing_checking_status();
+            continue;
+        }
         else {
-            //ex:  "sleep & "
+            // ex:  "sleep & "
             bool background = false; // here is where i start m6 the & part
             // first i will remove the white trail so i can get the last posi. easier
             int len = strlen(buffer);
-            while (isspace(buffer[len-1]) && len > 0){ //"sleep &"
+            while (len > 0 && isspace((unsigned char)buffer[len-1])){ //"sleep &"
                 buffer[--len] = '\0'; // reduce the size to take out the whitetrailing  
             }
-            if(len > 0 && buffer[len-1] == '&'){
+            if (len > 0 && buffer[len-1] == '&') {
                 background = true;
                 buffer[--len] = '\0'; // "sleep "
                 buffer[--len] = '\0'; // "sleep" 
@@ -99,12 +124,9 @@ int main(int argc, char *argv[]) {
                 // easy fix could be to put the while loop again but im lazy. 
             }
 
-            milestone3(buffer, shell_pid,background);  // Milestone 3 
+            milestone3(buffer, shell_pid, background);  // Milestone 3 
         }
-
-        if (strcmp(buffer, "!!") != 0) // if it's not !! at the end we then update last
-            strcpy(last_cmd, buffer);
-    }
+    } 
 
     if (file != stdin) { // in case if we opened the file we have to close it 
         fclose(file);
