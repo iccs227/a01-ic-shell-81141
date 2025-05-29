@@ -8,13 +8,13 @@ extern int fg_pid;
 
 void signal_Z(int sig_num) {
     if (fg_pid > 0) {
-        kill(-fg_pid, SIGTSTP);
+        kill(-fg_pid, SIGTSTP); // z
     }
 }
 
 void signal_C(int sig_num) {
     if (fg_pid > 0) {
-        kill(-fg_pid, SIGINT);
+        kill(-fg_pid, SIGINT); // c
     }
 }
 

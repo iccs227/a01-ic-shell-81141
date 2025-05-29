@@ -158,17 +158,18 @@ int main(int argc, char *argv[]) {
                 continue;
             } 
         else {
-            // ex:  "sleep & "
+            // ex:  "sleep 5 & "
+            //* purpose of this is to give a clean code so that the process can run easier
             bool background = false; // here is where i start m6 the & part
             // first i will remove the white trail so i can get the last posi. easier
             int len = strlen(buffer);
-            while (len > 0 && isspace((unsigned char)buffer[len-1])){ //"sleep &"
+            while (len > 0 && isspace((unsigned char)buffer[len-1])){ //"sleep 5 &"
                 buffer[--len] = '\0'; // reduce the size to take out the whitetrailing  
             }
             if (len > 0 && buffer[len-1] == '&') {
                 background = true;
-                buffer[--len] = '\0'; // "sleep "
-                buffer[--len] = '\0'; // "sleep" 
+                buffer[--len] = '\0'; // "sleep 5 "
+                buffer[--len] = '\0'; // "sleep 5" 
                 // if user puts more then 1 space then won't work skill issue
                 // easy fix could be to put the while loop again but im lazy. 
             }
