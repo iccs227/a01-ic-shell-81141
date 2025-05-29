@@ -50,7 +50,8 @@ int main(int argc, char *argv[]) {
     initialize();  // this is from the jobs 
     while (1) {
         if(active){
-            printf(":-) \n"); 
+            printf("₊˚⊹  ♡︎ \n"); 
+            printf(" `· . ꔫ \n"); 
             printf("icsh $ ");
             fflush(stdout); //force output to be written to the file
         }
@@ -151,6 +152,10 @@ int main(int argc, char *argv[]) {
                 }
             }
             continue;
+            }
+            else if (strcmp(buffer, "hangman") == 0) {
+                hangman_game();
+                continue;
             } 
         else {
             // ex:  "sleep & "
