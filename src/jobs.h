@@ -18,5 +18,6 @@ typedef struct jobs{
 void initialize(void);
 int  adding_jobs(pid_t pgid, const char *cmd);
 void printing_checking_status(void);
+jobs_t *find_job_id(int id);
 
 #endif 

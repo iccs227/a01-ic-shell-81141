@@ -92,15 +92,20 @@ void milestone3(char *buffer, pid_t shell_pid, bool background) {
 
             int status; 
             waitpid(pid, &status, WUNTRACED);
-            tcsetpgrp(0, shell_pid); // return control to the shell 
-            fg_pid = 0;
 
             if (WIFSTOPPED(status)) {
+                //it's so that the stopped processes also gets put into the list 
+                int job_id = adding_jobs(pid, full_cmd);
+                jobs_t *j = find_job_id(job_id);
+                j->status = Stopped;
                 printf("\nSuspended\n");
+                printf("[%d]+  Stopped\t%s\n", job_id, full_cmd);
             }
             if (WIFEXITED(status)) {
                 exit2 = WEXITSTATUS(status);
             }
+            tcsetpgrp(0, shell_pid); // return control to the shell 
+            fg_pid = 0;
         }
     }
 }

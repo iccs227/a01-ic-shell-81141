@@ -46,7 +46,7 @@ static void job_check_status(jobs_t *j){
 }
 
 //*Remove jobs when they are done 
-static void remove_job(int index){
+static void remove_job_index(int index){
     free(job_list[index].cmd);
     if(index != number_of_jobs - 1){
         job_list[index] = job_list[number_of_jobs - 1];
@@ -58,7 +58,7 @@ static void removing_done(void){
     for (int i = 0; i < number_of_jobs; ++i) { // here i am checking if the jobs are Done yet or not 
         job_check_status(&job_list[i]);
         if (job_list[i].status == Done) {
-            remove_job(i);
+            remove_job_index(i);
             i--;  // re-checking 
         }
     }
@@ -77,10 +77,29 @@ void printing_checking_status(void){
         else {  
             status_str = "Done";
         }
+        
         printf("[%d] %-8s %s &\n",
             job_list[i].id, 
             status_str,       
             job_list[i].cmd);    
     }
+}
 
+//* im starting the bg and fg part in milestone 6
+jobs_t *find_job_id(int id){
+    for (int i = 0; i < number_of_jobs; ++i) {
+        if (job_list[i].id == id)
+            return &job_list[i];
+    }
+    return NULL;
+}
+
+//*this is for the fg to remove the job by id 
+void remove_job(int job_id) {
+  for (int i = 0; i < number_of_jobs; i++) {
+    if (job_list[i].id == job_id) {
+      remove_job_index(i);
+      return;
+    }
+  }
 }

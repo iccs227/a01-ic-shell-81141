@@ -1,1 +1,20 @@
-hello
+total 193
+drwxrwxrwx 1 root root    512 May 29 21:49 .
+drwxrwxrwx 1 root root    512 May  7 13:59 ..
+drwxrwxrwx 1 root root    512 May 29 00:43 .git
+-rwxrwxrwx 1 root root     15 May  7 13:59 .gitignore
+drwxrwxrwx 1 root root    512 May 14 12:17 .vscode
+-rwxrwxrwx 1 root root    543 May 24 17:49 Makefile
+-rwxrwxrwx 1 root root    274 May  7 13:59 README.md
+drwxrwxrwx 1 root root    512 May 29 21:49 bin
+drwxrwxrwx 1 root root    512 May 29 21:49 build
+-rwxrwxrwx 1 root root     20 May 24 19:49 fruits.txt
+lrwxrwxrwx 1 root root      8 May 29 21:49 icsh -> bin/icsh
+-rwxrwxrwx 1 root root      0 May 24 19:45 input.txt
+-rwxrwxrwx 1 root root     19 May 24 20:12 numbers.txt
+-rwxrwxrwx 1 root root      0 May 29 21:51 output.txt
+-rwxrwxrwx 1 root root 189709 May  7 13:59 question (1).pdf
+-rwxrwxrwx 1 root root     20 May 24 20:12 sorted2.txt
+drwxrwxrwx 1 root root    512 May 26 21:01 src
+drwxrwxrwx 1 root root    512 May 17 21:35 test
+-rwxrwxrwx 1 root root    140 May 24 20:28 test.sh

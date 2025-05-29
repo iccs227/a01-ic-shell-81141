@@ -97,7 +97,10 @@ int main(int argc, char *argv[]) {
         }
         else if (strncmp(buffer, "exit ", 5) == 0) {
             exits = atoi(buffer + 5); // atoi converts the string into an int "300" -> 300
-            printf(">:-(\n");
+            printf("   /ᐢ⑅ᐢ\   ♡   ₊˚  \n");
+            printf("꒰ ˶• ༝ •˶꒱       ♡‧₊˚    ♡\n");
+            printf("./づ~ :¨·.·¨:     ₊˚  \n");
+            printf("       `·..·‘    ₊˚   ♡\n");
             fflush(stdout); 
             break; // exit loop; will return exits % 256 below
         }
@@ -108,6 +111,47 @@ int main(int argc, char *argv[]) {
             printing_checking_status();
             continue;
         }
+        else if(strncmp(buffer, "bg %" , 4)==0){
+            int job_id = atoi(buffer + 4);
+            jobs_t *j = find_job_id(job_id); // i'm losing it mentally 
+            if(j){
+                kill(-j->pgid, SIGCONT); //wake it up to sontinue after being stopped
+                j->status = Running;
+                printf("[%d] %s &\n", j->id, j->cmd);
+            }else{
+                printf("Error, no jobs");
+            }
+            continue;
+            }
+        else if(strncmp(buffer, "fg %" , 4)==0){
+            int job_id = atoi(buffer + 4);
+            jobs_t *j = find_job_id(job_id); // still losing it mentally 
+            if(j){
+
+                kill(-j->pgid, SIGCONT);
+                tcsetpgrp(0, j->pgid); // give the job the terminal so she can pop off
+                // similar to the parent in executor.c
+                fg_pid = j->pgid;
+                int status;
+                waitpid(-j->pgid,&status,WUNTRACED); // wait for the process to be done
+                printf("%s\n", j->cmd);
+                fflush(stdout);
+                
+                // here i reclaim the terminal after the process is done 
+                tcsetpgrp(0,shell_pid);
+                fg_pid = 0;
+
+                //now imma make the crtl z work here so can cancel it out 
+                 if (WIFSTOPPED(status)) {
+                    j->status = Stopped;
+                    printf("[%d]+  Stopped\t%s\n", j->id, j->cmd);
+                } else {
+                    j->status = Done;
+                    remove_job(job_id); 
+                }
+            }
+            continue;
+            } 
         else {
             // ex:  "sleep & "
             bool background = false; // here is where i start m6 the & part
